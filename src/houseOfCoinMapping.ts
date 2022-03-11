@@ -11,31 +11,27 @@ import {
   RoleRevoked,
   TrustedSignerChanged
 } from "../generated/HouseOfCoin/HouseOfCoin"
-import { ExampleEntity } from "../generated/schema"
+import { User } from "../generated/schema"
 
 export function handleCoinMinted(event: CoinMinted): void {
+  let id = event.params.user.toHex();
   // Entities can be loaded from the store using a string ID; this ID
   // needs to be unique across all entities of the same type
-  let entity = ExampleEntity.load(event.transaction.from.toHex())
+  let user = User.load(id)
 
   // Entities only exist after they have been saved to the store;
   // `null` checks allow to create entities on demand
-  if (!entity) {
-    entity = new ExampleEntity(event.transaction.from.toHex())
-
+  if (!user) {
+    user = new User(id)
     // Entity fields can be set using simple assignments
-    entity.count = BigInt.fromI32(0)
+    user.xocMinted = BigInt.fromI32(0)
   }
 
   // BigInt and BigDecimal math are supported
-  entity.count = entity.count + BigInt.fromI32(1)
-
-  // Entity fields can be set based on event parameters
-  entity.user = event.params.user
-  entity.backedtokenID = event.params.backedtokenID
+  user.xocMinted = user.xocMinted.plus(event.params.amount);
 
   // Entities can be written to the store with `.save()`
-  entity.save()
+  user.save()
 
   // Note: If a handler doesn't require existing field values, it is faster
   // _not_ to load the entity from the store. Instead, create it fresh with
@@ -71,9 +67,26 @@ export function handleCoinMinted(event: CoinMinted): void {
   // - contract.trustedSigner(...)
 }
 
-export function handleCoinPayback(event: CoinPayback): void {}
+export function handleCoinPayback(event: CoinPayback): void {
+  let id = event.params.user.toHex();
+  let user = User.load(id)
+  if (!user) {
+    user = new User(id)
+  }
+  user.xocMinted = user.xocMinted.minus(event.params.amount);
+  user.save()
+}
 
-export function handleLiquidation(event: Liquidation): void {}
+export function handleLiquidation(event: Liquidation): void {
+  let id = event.params.userLiquidated.toHex();
+  let user = User.load(id)
+  if (!user) {
+    user = new User(id)
+  }
+  user.ethDeposited = user.ethDeposited.minus(event.params.collateralAmount); 
+  event.params
+  user.save();
+}
 
 export function handleMarginCall(event: MarginCall): void {}
 

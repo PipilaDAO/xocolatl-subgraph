@@ -1,6 +1,6 @@
-type ExampleEntity @entity {
+type User @entity {
   id: ID!
-  count: BigInt!
-  user: Bytes! # address
-  backedtokenID: BigInt! # uint256
+  xocMinted: BigInt! # xoc debt / minted balance
+  ethDeposited: BigInt!
 }
+
